@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34928.147
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Better slack bot", "Better slack bot\Better slack bot.pyproj", "{2FD938D2-DBC7-4D78-AF07-1DC0F686F58C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2FD938D2-DBC7-4D78-AF07-1DC0F686F58C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FD938D2-DBC7-4D78-AF07-1DC0F686F58C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5CC9821D-0B39-45A2-B33C-59AF8F189006}
+	EndGlobalSection
+EndGlobal
