@@ -25,7 +25,15 @@ def send_msg(message="Hello from your app! :tada:"):
     except SlackApiError as e:
         # You will get a SlackApiError if "ok" is False
         assert e.response["error"]    # str like 'invalid_auth', 'channel_not_found'
-
+def make_request(inurl): # sends a request while making sure we are under the rate limit (60)
+    if requests_remaining > 2:
+        return requests.request("GET", inurl, headers=headers)
+    elif time.time() > rl_reset:
+        return requests.request("GET", inurl, headers=headers)
+    else:
+        print("rate limit reached. Waiting...")
+        time.sleep(rl_reset - time.time() + 2)
+        return requests.request("GET", inurl, headers=headers)
 # Initialize your app with your bot token and signing secret
 app = App(
     token=slack_tok,
@@ -85,13 +93,7 @@ def update_home_tab(client, event, logger):
 # Ready? Start your app!
 #if __name__ == "__main__":
 #    app.start(port=int(os.environ.get("PORT", 3000)))
-def check_rate_limit(start_time, current_time, requests):
-   if current_time - start_time > requests:
-      return 0 
-   else:
-      return (abs(current_time - start_time - requests) + 0.1)
-   
-  #
+
 
 
 url_base = "https://api.plane.so/api/v1/workspaces/852-robotics-testing/"
@@ -101,6 +103,9 @@ headers = {"x-api-key": PLANE_API_TOK}
 #url = "https://api.plane.so/api/v1/workspaces/{slug}/projects/{project_id}/issues/"
 response = requests.request("GET", url, headers=headers)
 data = json.loads(response.text)
+requests_remaining = int(response.headers['x-ratelimit-remaining'])
+print(requests_remaining)
+rl_reset = int(response.headers['x-ratelimit-reset'])
 list_of_projects = []
 project_ids = []
 issues = []
@@ -111,7 +116,6 @@ dif_activity_count = 0
 new_update_count = 0
 debugging = False
 issues_count = 0
-requests_pm = 0
 
 
 for i in range(len(data['results'])):
@@ -133,10 +137,10 @@ timer_start = time.time()
 for i in range(len(list_of_projects)):
     url = f"{url_base}projects/{project_ids[i]}/issues/"
     print(f"url selectd is: {url}")
-    #time.sleep(check_rate_limit(timer_start, time.time(), requests_pm))
-    response = requests.request("GET", url, headers=headers)
+    response = make_request(url)
     data2 = json.loads(response.text)
-    requests_pm += 1
+    requests_remaining = int(response.headers['x-ratelimit-remaining'])
+    rl_reset = int(response.headers['x-ratelimit-reset'])
     cur_issues_num = data2['count']
     print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
     issues_count += int(cur_issues_num)
@@ -146,27 +150,22 @@ for i in range(len(list_of_projects)):
        #third request
        url = f"{url_base}projects/{project_ids[i]}/issues/{data2['results'][x]['id']}/activities/"
        response2 = requests.request("GET", url, headers=headers)
-       requests_pm += 1
        data3 = json.loads(response2.text)
        iss_activity_count.append(len(data3['results']))
    
 print(f"There are {issues_count} issues in total. {len(issue_ids)}")
 send_msg(f"You have {issues_count} issues total in your project.")
 print(iss_activity_count)
-if requests_pm < 30:
-    time.sleep(20)
-    requests_pm = 0
-else:
-   time.sleep(40)
-   requests_pm = 0
+
 
 iss_activity_count2 = []
 for i in range(len(list_of_projects)):
     url = f"{url_base}projects/{project_ids[i]}/issues/"
     print(f"url selectd is: {url}")
-    response = requests.request("GET", url, headers=headers)
+    response = make_request(url)
+    requests_remaining = int(response.headers['x-ratelimit-remaining'])
+    rl_reset = int(response.headers['x-ratelimit-reset'])
     data2 = json.loads(response.text)
-    requests_pm += 1
     cur_issues_num = data2['count']
     print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
     issues_count += int(cur_issues_num)
@@ -174,9 +173,10 @@ for i in range(len(list_of_projects)):
        issue_ids.append(data2['results'][x]['id'])
        #third request
        url = f"{url_base}projects/{project_ids[i]}/issues/{data2['results'][x]['id']}/activities/"
-       response2 = requests.request("GET", url, headers=headers)
+       response2 = make_request(url)
+       requests_remaining = int(response.headers['x-ratelimit-remaining'])
+       rl_reset = int(response.headers['x-ratelimit-reset'])
        data3 = json.loads(response2.text)
-       requests_pm += 1
        iss_activity_count2.append(len(data3['results']))
 print(iss_activity_count)
 print(iss_activity_count2)
@@ -192,8 +192,9 @@ else:
          dif_activity_count += 1
          new_update_count = iss_activity_count2[i] - iss_activity_count[i]
          url = f"{url_base}projects/{issue_proj_ids[i]}/issues/{issue_ids[i]}/activities/"
-         response2 = requests.request("GET", url, headers=headers)
-         requests_pm += 1
+         response2 = make_request(url)
+         requests_remaining = int(response.headers['x-ratelimit-remaining'])
+         rl_reset = int(response.headers['x-ratelimit-reset'])
          data3 = json.loads(response2.text)
          for y in range(new_update_count):
             print(f"\n \n \n  {response2.text} \n \n")
