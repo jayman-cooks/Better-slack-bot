@@ -95,7 +95,7 @@ def update_home_tab(client, event, logger):
 #    app.start(port=int(os.environ.get("PORT", 3000)))
 
 
-
+loops = 5
 url_base = "https://api.plane.so/api/v1/workspaces/852-robotics-testing/"
 url = f"{url_base}projects/"
 PLANE_API_TOK = plane_api
@@ -205,9 +205,64 @@ else:
    print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
 loop_time = time.time() - timer_start
 print(f"It took {loop_time} seconds to finish one loop.")
+#LOOPING:
+
+for i in range(loops):
+    print("waiting, make your change!")
+    time.sleep(10)
+    issues_count = 0
+    loop_count += 1
+    for i in range(len(list_of_projects)):
+        url = f"{url_base}projects/{project_ids[i]}/issues/"
+        print(f"url selectd is: {url}")
+        response = make_request(url)
+        data2 = json.loads(response.text)
+        requests_remaining = int(response.headers['x-ratelimit-remaining'])
+        rl_reset = int(response.headers['x-ratelimit-reset'])
+        cur_issues_num = data2['count']
+        print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
+        if loop_count % 2 == 0:
+            issues_count += int(cur_issues_num)
+        for x in range(len(data2['results'])):
+            temp_issue_ids.append(data2['results'][x]['id'])
+            temp_issue_proj_ids.append(project_ids[i])
+            if (data2['results'][x]['completed_at']) == None:
+                temp_issue_stats.append(0)
+            else:
+                temp_issue_stats.append(1)
+    issue_stats = issue_stats2
+    issue_ids = issue_ids2
+    issue_proj_ids = issue_proj_ids2
+    
+    issue_ids2 = temp_issue_ids
+    issue_stats2 = temp_issue_stats
+    issue_proj_ids2 = temp_issue_proj_ids
+    
+    temp_issue_stats = []
+    temp_issue_ids = []
+    temp_issue_proj_ids = []
+    print(f"THIS SHOULD BE BLANK: {temp_issue_proj_ids}")
+    if loop_count % 2 == 0:
+        print(f"There are {issues_count} issues in total. {len(issue_ids)}")
+        send_msg(f"You have {issues_count} issues total in your project.")
 
 
+    if issue_stats == issue_stats2:
+       print("lists are identical")
+       send_msg("No changes have been made since the first loop excecuted")
+    else:
+       print("lists aren't identical or you messed up the code")
 
+       for i in range(len(issue_stats)):
+          if issue_stats2[i] != issue_stats[i]:
+             dif_activity_count += 1
+             if issue_stats2[i] == 1:
+                 send_msg(f"Issue with id {issue_ids[i]} was completed!")
+       send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
+       print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
+    dif_activity_count = 0
+    loop_time = time.time() - timer_start
+    print(f"It took {loop_time} seconds to finish one loop.")
 # old method:
 # Find all projects + index
 # Find all issues + index
