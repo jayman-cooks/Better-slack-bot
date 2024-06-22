@@ -110,14 +110,16 @@ list_of_projects = []
 project_ids = []
 issues = []
 issue_ids = []
+issue_ids2 = []
+issue_stats = []
+issue_stats2 = []
 issue_proj_ids = []
-iss_activity_count = []
 dif_activity_count = 0
 new_update_count = 0
 debugging = False
 issues_count = 0
 
-
+timer_start = time.time()
 for i in range(len(data['results'])):
     list_of_projects.append(data['results'][i]['name'])
     project_ids.append(data['results'][i]['id'])
@@ -133,9 +135,9 @@ if debugging:
     print("\n -----HEADER----")
     print(response.text)
 
-timer_start = time.time()
+
 for i in range(len(list_of_projects)):
-    url = f"{url_base}projects/{project_ids[i]}/issues/"
+    url = f"{url_base}projects/{project_ids[i]}/states/"
     print(f"url selectd is: {url}")
     response = make_request(url)
     data2 = json.loads(response.text)
@@ -147,20 +149,14 @@ for i in range(len(list_of_projects)):
     for x in range(len(data2['results'])):
        issue_ids.append(data2['results'][x]['id'])
        issue_proj_ids.append(project_ids[i])
-       #third request
-       url = f"{url_base}projects/{project_ids[i]}/issues/{data2['results'][x]['id']}/activities/"
-       response2 = requests.request("GET", url, headers=headers)
-       data3 = json.loads(response2.text)
-       iss_activity_count.append(len(data3['results']))
+       issue_stats.append(data2['results'][x]['name'])
    
 print(f"There are {issues_count} issues in total. {len(issue_ids)}")
 send_msg(f"You have {issues_count} issues total in your project.")
-print(iss_activity_count)
 
-
-iss_activity_count2 = []
+time.sleep(10)
 for i in range(len(list_of_projects)):
-    url = f"{url_base}projects/{project_ids[i]}/issues/"
+    url = f"{url_base}projects/{project_ids[i]}/states/"
     print(f"url selectd is: {url}")
     response = make_request(url)
     requests_remaining = int(response.headers['x-ratelimit-remaining'])
@@ -170,36 +166,23 @@ for i in range(len(list_of_projects)):
     print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
     issues_count += int(cur_issues_num)
     for x in range(len(data2['results'])):
-       issue_ids.append(data2['results'][x]['id'])
-       #third request
-       url = f"{url_base}projects/{project_ids[i]}/issues/{data2['results'][x]['id']}/activities/"
-       response2 = make_request(url)
-       requests_remaining = int(response.headers['x-ratelimit-remaining'])
-       rl_reset = int(response.headers['x-ratelimit-reset'])
-       data3 = json.loads(response2.text)
-       iss_activity_count2.append(len(data3['results']))
-print(iss_activity_count)
-print(iss_activity_count2)
-time.sleep(5)
-if iss_activity_count == iss_activity_count2:
+       issue_ids2.append(data2['results'][x]['id'])
+       issue_stats2.append(data2['results'][x]['name'])
+print(issue_ids)
+print(issue_ids2)
+print(f"lists have same legnth: {len(issue_ids) == len(issue_ids2)}")
+time.sleep(2)
+if issue_stats == issue_stats2:
    print("lists are identical")
    send_msg("No changes have been made since the first loop excecuted")
 else:
    print("lists aren't identical or you messed up the code")
 
-   for i in range(len(iss_activity_count)):
-      if iss_activity_count2[i] != iss_activity_count[i]:
+   for i in range(len(issue_stats)):
+      if issue_stats2[i] != issue_stats[i]:
          dif_activity_count += 1
-         new_update_count = iss_activity_count2[i] - iss_activity_count[i]
-         url = f"{url_base}projects/{issue_proj_ids[i]}/issues/{issue_ids[i]}/activities/"
-         response2 = make_request(url)
-         requests_remaining = int(response.headers['x-ratelimit-remaining'])
-         rl_reset = int(response.headers['x-ratelimit-reset'])
-         data3 = json.loads(response2.text)
-         for y in range(new_update_count):
-            print(f"\n \n \n  {response2.text} \n \n")
-            if data3['results'][-(y+1)]['field'] == 'state' and data3['results'][-(y+1)]['new_value'] == 'Done':
-               send_msg(f"Issue with id {issue_ids[i]} was completed!")
+         if issue_stats2[i] == "Done":
+             send_msg(f"Issue with id {issue_ids[i]} was completed!")
    send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
    print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
 
@@ -222,3 +205,21 @@ else:
 
 #{"stuff":"More stuff", "things":"additional things", "results":[{"id":"iofdhs", "number":"6"}]}
 
+# old method:
+# Find all projects + index
+# Find all issues + index
+# Count all changes for all issues
+# Wait
+# Repeat previous steps
+# Check any new changes made it complete
+# Report if so
+# 
+# 
+# 
+# Better way:
+# Find all projects + index
+# Find all issues + index
+# Index all status of issues
+# Wait
+# Check if any issues' statuses were changed to complete
+# Report if so   
