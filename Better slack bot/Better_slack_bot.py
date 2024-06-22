@@ -109,15 +109,22 @@ rl_reset = int(response.headers['x-ratelimit-reset'])
 list_of_projects = []
 project_ids = []
 issues = []
+temp_issue_ids = []
 issue_ids = []
 issue_ids2 = []
+temp_issue_stats = []
 issue_stats = []
 issue_stats2 = []
+
+temp_issue_proj_ids = []
 issue_proj_ids = []
+issue_proj_ids2 = []
 dif_activity_count = 0
 new_update_count = 0
 debugging = False
 issues_count = 0
+loop_count = 0
+
 
 timer_start = time.time()
 for i in range(len(data['results'])):
@@ -135,42 +142,71 @@ if debugging:
     print("\n -----HEADER----")
     print(response.text)
 
+for w in range(2):
+    loop_count += 1
+    for i in range(len(list_of_projects)):
+        url = f"{url_base}projects/{project_ids[i]}/issues/"
+        print(f"url selectd is: {url}")
+        response = make_request(url)
+        data2 = json.loads(response.text)
+        requests_remaining = int(response.headers['x-ratelimit-remaining'])
+        rl_reset = int(response.headers['x-ratelimit-reset'])
+        cur_issues_num = data2['count']
+        print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
+        if loop_count % 2 == 0:
+            issues_count += int(cur_issues_num)
+        for x in range(len(data2['results'])):
+            temp_issue_ids.append(data2['results'][x]['id'])
+            #issue_ids.append(data2['results'][x]['id'])
+            temp_issue_proj_ids.append(project_ids[i])
+            if (data2['results'][x]['completed_at']) == None:
+                temp_issue_stats.append(0)
+            else:
+                temp_issue_stats.append(1)
+            #issue_stats.append(data2['results'][x]['name'])
+    if loop_count % 2 == 1:
+       print("USING FIRST LIST")
+       time.sleep(1)
+       issue_ids = temp_issue_ids
+       issue_stats = temp_issue_stats
+       issue_proj_ids = temp_issue_proj_ids
+    else:
+       print("USING SECOND LIST")
+       time.sleep(1)
+       issue_ids2 = temp_issue_ids
+       issue_stats2 = temp_issue_stats
+       issue_proj_ids2 = temp_issue_proj_ids
+    temp_issue_stats = []
+    temp_issue_ids = []
+    temp_issue_proj_ids = []
+    print(f"THIS SHOULD BE BLANK: {temp_issue_proj_ids}")
+    if loop_count % 2 == 0:
+        print(f"There are {issues_count} issues in total. {len(issue_ids)}")
+        send_msg(f"You have {issues_count} issues total in your project.")
+    if w == 0:
+        print("waiting... make your change!")
+        time.sleep(10)
+#for i in range(len(list_of_projects)):
+#    url = f"{url_base}projects/{project_ids[i]}/states/"
+#    print(f"url selectd is: {url}")
+#    response = make_request(url)
+#    requests_remaining = int(response.headers['x-ratelimit-remaining'])
+#    rl_reset = int(response.headers['x-ratelimit-reset'])
+#    data2 = json.loads(response.text)
+#    cur_issues_num = data2['count']
+#    print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
+#    issues_count += int(cur_issues_num)
+#    for x in range(len(data2['results'])):
+#       issue_ids2.append(data2['results'][x]['id'])
+#       issue_stats2.append(data2['results'][x]['name'])
+#print(issue_ids)
+#print(issue_ids2)
+#print(f"lists have same legnth: {len(issue_ids) == len(issue_ids2)}")
 
-for i in range(len(list_of_projects)):
-    url = f"{url_base}projects/{project_ids[i]}/states/"
-    print(f"url selectd is: {url}")
-    response = make_request(url)
-    data2 = json.loads(response.text)
-    requests_remaining = int(response.headers['x-ratelimit-remaining'])
-    rl_reset = int(response.headers['x-ratelimit-reset'])
-    cur_issues_num = data2['count']
-    print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
-    issues_count += int(cur_issues_num)
-    for x in range(len(data2['results'])):
-       issue_ids.append(data2['results'][x]['id'])
-       issue_proj_ids.append(project_ids[i])
-       issue_stats.append(data2['results'][x]['name'])
-   
-print(f"There are {issues_count} issues in total. {len(issue_ids)}")
-send_msg(f"You have {issues_count} issues total in your project.")
-
-time.sleep(10)
-for i in range(len(list_of_projects)):
-    url = f"{url_base}projects/{project_ids[i]}/states/"
-    print(f"url selectd is: {url}")
-    response = make_request(url)
-    requests_remaining = int(response.headers['x-ratelimit-remaining'])
-    rl_reset = int(response.headers['x-ratelimit-reset'])
-    data2 = json.loads(response.text)
-    cur_issues_num = data2['count']
-    print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
-    issues_count += int(cur_issues_num)
-    for x in range(len(data2['results'])):
-       issue_ids2.append(data2['results'][x]['id'])
-       issue_stats2.append(data2['results'][x]['name'])
-print(issue_ids)
-print(issue_ids2)
-print(f"lists have same legnth: {len(issue_ids) == len(issue_ids2)}")
+print("\n \n HERE IS FIRST LIST:")
+print(issue_stats)
+print("\n \n HERE IS SECOND LIST:")
+print(issue_stats2)
 time.sleep(2)
 if issue_stats == issue_stats2:
    print("lists are identical")
@@ -181,11 +217,12 @@ else:
    for i in range(len(issue_stats)):
       if issue_stats2[i] != issue_stats[i]:
          dif_activity_count += 1
-         if issue_stats2[i] == "Done":
+         if issue_stats2[i] == 1:
              send_msg(f"Issue with id {issue_ids[i]} was completed!")
    send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
    print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
-
+loop_time = time.time() - timer_start
+print(f"It took {loop_time} seconds to finish one loop.")
 #for i in range(len(data2['results'])):
 #    issues.append(data2['results'][i]['name'])
 #    issue_ids.append(data2['results'][i]['id'])
