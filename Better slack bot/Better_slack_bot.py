@@ -157,13 +157,11 @@ for w in range(2):
             issues_count += int(cur_issues_num)
         for x in range(len(data2['results'])):
             temp_issue_ids.append(data2['results'][x]['id'])
-            #issue_ids.append(data2['results'][x]['id'])
             temp_issue_proj_ids.append(project_ids[i])
             if (data2['results'][x]['completed_at']) == None:
                 temp_issue_stats.append(0)
             else:
                 temp_issue_stats.append(1)
-            #issue_stats.append(data2['results'][x]['name'])
     if loop_count % 2 == 1:
        print("USING FIRST LIST")
        time.sleep(1)
@@ -186,22 +184,6 @@ for w in range(2):
     if w == 0:
         print("waiting... make your change!")
         time.sleep(10)
-#for i in range(len(list_of_projects)):
-#    url = f"{url_base}projects/{project_ids[i]}/states/"
-#    print(f"url selectd is: {url}")
-#    response = make_request(url)
-#    requests_remaining = int(response.headers['x-ratelimit-remaining'])
-#    rl_reset = int(response.headers['x-ratelimit-reset'])
-#    data2 = json.loads(response.text)
-#    cur_issues_num = data2['count']
-#    print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
-#    issues_count += int(cur_issues_num)
-#    for x in range(len(data2['results'])):
-#       issue_ids2.append(data2['results'][x]['id'])
-#       issue_stats2.append(data2['results'][x]['name'])
-#print(issue_ids)
-#print(issue_ids2)
-#print(f"lists have same legnth: {len(issue_ids) == len(issue_ids2)}")
 
 print("\n \n HERE IS FIRST LIST:")
 print(issue_stats)
@@ -223,24 +205,8 @@ else:
    print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
 loop_time = time.time() - timer_start
 print(f"It took {loop_time} seconds to finish one loop.")
-#for i in range(len(data2['results'])):
-#    issues.append(data2['results'][i]['name'])
-#    issue_ids.append(data2['results'][i]['id'])
-#    print(data2['results'][i]['name'])
-#    print(data2['results'][i]['id'])
-#selected_issue = int(input(f"Please make your selection from the following issues: {issues}"))
 
 
-
-#text = response.text.split(",")[1:-1]
-#for i in range(len(text)):
-#    print(text[i])
-
-#print(f"there are {text[3][8:]} projects. ")
-#projects = text[6:]
-#print(f"")
-
-#{"stuff":"More stuff", "things":"additional things", "results":[{"id":"iofdhs", "number":"6"}]}
 
 # old method:
 # Find all projects + index
