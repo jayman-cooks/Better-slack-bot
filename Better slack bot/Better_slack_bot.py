@@ -16,7 +16,7 @@ slack_sign = os.environ.get("SLACK_SIGNING_SECRET")
 plane_api = os.environ.get("PLANE_API_TOK")
 slack_channel = os.environ.get("SLACK_CHANNEL")
 plane_slug = os.environ.get("PLANE_WORKSPACE_SLUG")
-run_duration = 5 # how long you want the bot to run for in minutes
+run_duration = 15 # how long you want the bot to run for in minutes
 
 Client = WebClient(token=slack_tok)
 def send_msg(message="Testing the app :tada:"): # sends a message via slack
@@ -92,7 +92,6 @@ url_base = f"https://api.plane.so/api/v1/workspaces/{plane_slug}/"
 url = f"{url_base}projects/"
 PLANE_API_TOK = plane_api
 headers = {"x-api-key": PLANE_API_TOK}
-#url = "https://api.plane.so/api/v1/workspaces/{slug}/projects/{project_id}/issues/"
 response = requests.request("GET", url, headers=headers)
 data = json.loads(response.text)
 requests_remaining = int(response.headers['x-ratelimit-remaining'])
@@ -117,7 +116,6 @@ issue_names2 = []
 
 dif_activity_count = 0
 new_update_count = 0
-debugging = False
 issues_count = 0
 loop_count = 0
 
@@ -127,20 +125,11 @@ for i in range(len(data['results'])):
     list_of_projects.append(data['results'][i]['name'])
     project_ids.append(data['results'][i]['id'])
     print(data['results'][i]['name'])
-    #send_msg(str(data['results'][i]['name']))
     print(data['results'][i]['id'])
-    #send_msg(str(data['results'][i]['id']))
 
-
-if debugging:
-    print(data['next_page_results'])
-    print(data)
-    print("\n -----HEADER----")
-    print(response.text)
-
-for w in range(2):
+for w in range(2): # This manually loops twice to get the bot started.
     loop_count += 1
-    for i in range(len(list_of_projects)):
+    for i in range(len(list_of_projects)): # loops for every project there is (we need to get all issues of all projects)
         url = f"{url_base}projects/{project_ids[i]}/issues/" # updates URL
         print(f"url selectd is: {url}")
         response = make_request(url)
@@ -151,7 +140,7 @@ for w in range(2):
         print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
         if loop_count % 2 == 0:
             issues_count += int(cur_issues_num)
-        for x in range(len(data2['results'])):
+        for x in range(len(data2['results'])): # loops for every issue there is and adds it to necessary lists
             temp_issue_ids.append(data2['results'][x]['id'])
             temp_issue_proj_ids.append(project_ids[i])
             issue_names_temp.append(data2['results'][x]['name'])
@@ -160,19 +149,15 @@ for w in range(2):
             else:
                 temp_issue_stats.append(1)
     if loop_count % 2 == 1:
-       print("USING FIRST LIST")
-       time.sleep(1)
-       issue_ids = temp_issue_ids
-       issue_stats = temp_issue_stats
-       issue_proj_ids = temp_issue_proj_ids
-       issue_names = issue_names_temp
+        issue_ids = temp_issue_ids
+        issue_stats = temp_issue_stats
+        issue_proj_ids = temp_issue_proj_ids
+        issue_names = issue_names_temp
     else:
-       print("USING SECOND LIST")
-       time.sleep(1)
-       issue_ids2 = temp_issue_ids
-       issue_stats2 = temp_issue_stats
-       issue_proj_ids2 = temp_issue_proj_ids
-       issue_names2 = issue_names_temp
+        issue_ids2 = temp_issue_ids
+        issue_stats2 = temp_issue_stats
+        issue_proj_ids2 = temp_issue_proj_ids
+        issue_names2 = issue_names_temp
     temp_issue_stats = []
     temp_issue_ids = []
     temp_issue_proj_ids = []
@@ -184,26 +169,22 @@ for w in range(2):
         print("waiting... make your change!")
         time.sleep(10)
 
-print("\n \n HERE IS FIRST LIST:")
-print(issue_stats)
-print("\n \n HERE IS SECOND LIST:")
-print(issue_stats2)
-time.sleep(2)
 if issue_stats == issue_stats2:
-   print("lists are identical")
-   send_msg("No changes have been made since the first loop excecuted")
+    print("lists are identical")
+    #send_msg("No changes have been made since the first loop excecuted")
 else:
-   print("lists aren't identical or you messed up the code")
+    print("lists aren't identical or you messed up the code")
 
-   for i in range(len(issue_stats)):
-      if issue_stats2[i] != issue_stats[i]:
-         dif_activity_count += 1
-         if issue_stats2[i] == 1:
-             send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
-   send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
-   print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
+    for i in range(len(issue_stats)):
+        if issue_stats2[i] != issue_stats[i]:
+            dif_activity_count += 1
+            if issue_stats2[i] == 1:
+                send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
+    #send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
+    print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
 loop_time = (time.time() - timer_start) / 60
 print(f"It took {loop_time} minutes to finish one loop.")
+
 #LOOPING:
 loops = round(run_duration / loop_time) - 1
 for z in range(loops):
@@ -250,23 +231,24 @@ for z in range(loops):
 
 
     if issue_stats == issue_stats2:
-       print("lists are identical")
-       #send_msg("No changes have been made since the first loop excecuted")
+        print("lists are identical")
+        #send_msg("No changes have been made since the first loop excecuted")
     else:
-       print("lists aren't identical or you messed up the code")
+        print("lists aren't identical or you messed up the code")
 
-       for i in range(len(issue_stats2)):
-          if issue_stats2[i] != issue_stats[i]:
-             dif_activity_count += 1
-             if issue_stats2[i] == 1:
-                 send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
-       #send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
-       print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
+        for i in range(len(issue_stats2)):
+            if issue_stats2[i] != issue_stats[i]:
+                dif_activity_count += 1
+                if issue_stats2[i] == 1:
+                    send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
+        #send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
+        print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
     dif_activity_count = 0
     loop_time = time.time() - timer_start
     print(f"It took {loop_time} seconds to finish one loop.")
 print("The bot has ran for the alloted time. Terminating...")
 sys.exit(0)
+
 # old method:
 # Find all projects + index
 # Find all issues + index
