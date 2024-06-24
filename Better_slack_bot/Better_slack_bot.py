@@ -16,6 +16,7 @@ slack_sign = os.environ.get("SLACK_SIGNING_SECRET")
 plane_api = os.environ.get("PLANE_API_TOK")
 slack_channel = os.environ.get("SLACK_CHANNEL")
 plane_slug = os.environ.get("PLANE_WORKSPACE_SLUG")
+run_duration = 5 # how long you want the bot to run for in minutes
 
 Client = WebClient(token=slack_tok)
 def send_msg(message="Testing the app :tada:"): # sends a message via slack
@@ -42,7 +43,6 @@ app = App(
     signing_secret=slack_sign
 )
 
-# New functionality
 @app.event("app_home_opened")
 def update_home_tab(client, event, logger):
   try:
@@ -85,8 +85,10 @@ def update_home_tab(client, event, logger):
 #    app.start(port=int(os.environ.get("PORT", 3000)))
 
 
-loops = 5
+loops = 3 # temp number - gets changed later
 url_base = f"https://api.plane.so/api/v1/workspaces/{plane_slug}/"
+# This is the format of API requests. The url is chosen from the Plane API reference. If you want to add your own features,
+# I would recommend going there first.
 url = f"{url_base}projects/"
 PLANE_API_TOK = plane_api
 headers = {"x-api-key": PLANE_API_TOK}
@@ -200,10 +202,10 @@ else:
              send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
    send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
    print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
-loop_time = time.time() - timer_start
-print(f"It took {loop_time} seconds to finish one loop.")
+loop_time = (time.time() - timer_start) / 60
+print(f"It took {loop_time} minutes to finish one loop.")
 #LOOPING:
-
+loops = round(run_duration / loop_time) - 1
 for z in range(loops):
     print("waiting, make your change!")
     time.sleep(10)
@@ -223,6 +225,7 @@ for z in range(loops):
         for x in range(len(data2['results'])):
             temp_issue_ids.append(data2['results'][x]['id'])
             temp_issue_proj_ids.append(project_ids[i])
+            issue_names_temp.append(data2['results'][x]['name'])
             if (data2['results'][x]['completed_at']) == None:
                 temp_issue_stats.append(0)
             else:
@@ -243,25 +246,27 @@ for z in range(loops):
     issue_names_temp = []
     if loop_count % 2 == 0:
         print(f"There are {issues_count} issues in total. {len(issue_ids)}")
-        send_msg(f"You have {issues_count} issues total in your project.")
+        #send_msg(f"You have {issues_count} issues total in your project.")
 
 
     if issue_stats == issue_stats2:
        print("lists are identical")
-       send_msg("No changes have been made since the first loop excecuted")
+       #send_msg("No changes have been made since the first loop excecuted")
     else:
        print("lists aren't identical or you messed up the code")
 
-       for i in range(len(issue_stats)):
+       for i in range(len(issue_stats2)):
           if issue_stats2[i] != issue_stats[i]:
              dif_activity_count += 1
              if issue_stats2[i] == 1:
                  send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
-       send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
+       #send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
        print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
     dif_activity_count = 0
     loop_time = time.time() - timer_start
     print(f"It took {loop_time} seconds to finish one loop.")
+print("The bot has ran for the alloted time. Terminating...")
+sys.exit(0)
 # old method:
 # Find all projects + index
 # Find all issues + index

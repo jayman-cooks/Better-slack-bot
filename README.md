@@ -23,6 +23,8 @@ Finding the slug is very easy; simply navigate to your workspace and copy the se
 
 All of these variables are stored using environment variables under the names above(I would recommend looking it up if you don't know that that is.). 
 
+I would also recommend changing the `run_duration` variable to how long you want your bot to run.
+
 ## Running without Docker
 Install dependancies in requirements.txt, and run the python script. 
 ## Docker 
