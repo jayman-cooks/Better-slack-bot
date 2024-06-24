@@ -14,12 +14,13 @@ from slack_sdk.errors import SlackApiError
 slack_tok = os.environ.get("SLACK_BOT_TOKEN")
 slack_sign = os.environ.get("SLACK_SIGNING_SECRET")
 plane_api = os.environ.get("PLANE_API_TOK")
+slack_channel = os.environ.get("SLACK_CHANNEL")
 
 Client = WebClient(token=slack_tok)
 def send_msg(message="Hello from your app! :tada:"):
     try:
         response = Client.chat_postMessage(
-            channel="C077KC9NAFN",
+            channel=slack_channel,
             text=message
         )
     except SlackApiError as e:
