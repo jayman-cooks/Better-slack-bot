@@ -41,9 +41,9 @@ docker run -d -p 5000:5000 myimage
 ```
 Your docker image should now run in a container!
 
-## Using AWS:
+## Using AWS (jumping off point):
 To run this on AWS is a bit complicated(only do this if you have experience). You need to create an ECR repo, push the docker image, and create a Lambda function using it. Here are some good resources:
 https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
 https://docs.aws.amazon.com/lambda/latest/dg/images-create.html
 
-Once you have your Lambda function, bump up your timeout value to something over a minute. You can use the test event to run your bot. 
+Once you have your Lambda function, bump up your timeout value to something pretty similar to your run duration. You can use the test event to run your bot. Another AWS service would probably work, but I chose Lambda because it could theoretically be free. Be careful with ECR though; you only get 1 year of free private storage. 

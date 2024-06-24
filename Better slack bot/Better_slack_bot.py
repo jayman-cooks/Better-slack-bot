@@ -16,7 +16,7 @@ slack_sign = os.environ.get("SLACK_SIGNING_SECRET")
 plane_api = os.environ.get("PLANE_API_TOK")
 slack_channel = os.environ.get("SLACK_CHANNEL")
 plane_slug = os.environ.get("PLANE_WORKSPACE_SLUG")
-run_duration = 15 # how long you want the bot to run for in minutes
+run_duration = 120 # how long you want the bot to run for in minutes
 
 Client = WebClient(token=slack_tok)
 def send_msg(message="Testing the app :tada:"): # sends a message via slack
@@ -229,7 +229,6 @@ for z in range(loops):
         print(f"There are {issues_count} issues in total. {len(issue_ids)}")
         #send_msg(f"You have {issues_count} issues total in your project.")
 
-
     if issue_stats == issue_stats2:
         print("lists are identical")
         #send_msg("No changes have been made since the first loop excecuted")
@@ -265,5 +264,5 @@ sys.exit(0)
 # Find all issues + index
 # Index all status of issues
 # Wait
-# Check if any issues' statuses were changed to complete
+# Check if any issues' have a completed at value
 # Report if so   
