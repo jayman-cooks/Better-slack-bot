@@ -8,6 +8,7 @@ You will need these variables to make your own instance of this bot:
  - `SLACK_SIGNING_SECRET`: Your Slack signing key
  - `PLANE_API_TOK`: Your Plane API key
  - `SLACK_CHANNEL`: The channel you want to recieve messages in
+ - `PLANE_WORKSPACE_SLUG`: The slug of the Plane workspace you want to track
 ### Plane token:
 To get your Plane API key, go to workspace settings --> API tokens --> add API token. I would recomend adding an expiration date for added security (which means you would have to update it).
 ### Slack token:
@@ -16,6 +17,8 @@ To get your slack token and signing key, you need to create a slack app. To do s
 In settings go to Basic Information --> App Credentials --> Signing Secret
 ### Slack channel:
 Right click the channel you want --> view channel details --> scroll down to channel ID
+### Workspace slug:
+Finding the slug is very easy; simply navigate to your workspace and copy the section after https://app.plane.so/ but before the slash.
 
 
 All of these variables are stored using environment variables under the names above(I would recommend looking it up if you don't know that that is.). 

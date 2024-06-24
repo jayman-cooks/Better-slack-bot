@@ -15,9 +15,10 @@ slack_tok = os.environ.get("SLACK_BOT_TOKEN")
 slack_sign = os.environ.get("SLACK_SIGNING_SECRET")
 plane_api = os.environ.get("PLANE_API_TOK")
 slack_channel = os.environ.get("SLACK_CHANNEL")
+plane_slug = os.environ.get("PLANE_WORKSPACE_SLUG")
 
 Client = WebClient(token=slack_tok)
-def send_msg(message="Hello from your app! :tada:"):
+def send_msg(message="Testing the app :tada:"): # sends a message via slack
     try:
         response = Client.chat_postMessage(
             channel=slack_channel,
@@ -60,7 +61,7 @@ def update_home_tab(client, event, logger):
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": "*Welcome to your _App's Home tab_* :tada:"
+              "text": "Better Plane Bot"
             }
           },
           {
@@ -70,21 +71,9 @@ def update_home_tab(client, event, logger):
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": "This button won't do much for now but you can set up a listener for it using the `actions()` method and passing its unique `action_id`. See an example in the `examples` folder within your Bolt app."
+              "text": "The integration between Plane and Slack. I will give updates on the completion of issues."
             }
           },
-          {
-            "type": "actions",
-            "elements": [
-              {
-                "type": "button",
-                "text": {
-                  "type": "plain_text",
-                  "text": "Click me!"
-                }
-              }
-            ]
-          }
         ]
       }
     )
@@ -97,7 +86,7 @@ def update_home_tab(client, event, logger):
 
 
 loops = 5
-url_base = "https://api.plane.so/api/v1/workspaces/852-robotics-testing/"
+url_base = f"https://api.plane.so/api/v1/workspaces/{plane_slug}/"
 url = f"{url_base}projects/"
 PLANE_API_TOK = plane_api
 headers = {"x-api-key": PLANE_API_TOK}
@@ -107,6 +96,7 @@ data = json.loads(response.text)
 requests_remaining = int(response.headers['x-ratelimit-remaining'])
 print(requests_remaining)
 rl_reset = int(response.headers['x-ratelimit-reset'])
+
 list_of_projects = []
 project_ids = []
 issues = []
@@ -116,10 +106,13 @@ issue_ids2 = []
 temp_issue_stats = []
 issue_stats = []
 issue_stats2 = []
-
 temp_issue_proj_ids = []
 issue_proj_ids = []
 issue_proj_ids2 = []
+issue_names_temp = []
+issue_names = []
+issue_names2 = []
+
 dif_activity_count = 0
 new_update_count = 0
 debugging = False
@@ -146,11 +139,11 @@ if debugging:
 for w in range(2):
     loop_count += 1
     for i in range(len(list_of_projects)):
-        url = f"{url_base}projects/{project_ids[i]}/issues/"
+        url = f"{url_base}projects/{project_ids[i]}/issues/" # updates URL
         print(f"url selectd is: {url}")
         response = make_request(url)
-        data2 = json.loads(response.text)
-        requests_remaining = int(response.headers['x-ratelimit-remaining'])
+        data2 = json.loads(response.text) # loads the info recieved into dictionary
+        requests_remaining = int(response.headers['x-ratelimit-remaining']) # updates ratelimit info
         rl_reset = int(response.headers['x-ratelimit-reset'])
         cur_issues_num = data2['count']
         print(f"There are {cur_issues_num} issues in {list_of_projects[i]}")
@@ -159,6 +152,7 @@ for w in range(2):
         for x in range(len(data2['results'])):
             temp_issue_ids.append(data2['results'][x]['id'])
             temp_issue_proj_ids.append(project_ids[i])
+            issue_names_temp.append(data2['results'][x]['name'])
             if (data2['results'][x]['completed_at']) == None:
                 temp_issue_stats.append(0)
             else:
@@ -169,16 +163,18 @@ for w in range(2):
        issue_ids = temp_issue_ids
        issue_stats = temp_issue_stats
        issue_proj_ids = temp_issue_proj_ids
+       issue_names = issue_names_temp
     else:
        print("USING SECOND LIST")
        time.sleep(1)
        issue_ids2 = temp_issue_ids
        issue_stats2 = temp_issue_stats
        issue_proj_ids2 = temp_issue_proj_ids
+       issue_names2 = issue_names_temp
     temp_issue_stats = []
     temp_issue_ids = []
     temp_issue_proj_ids = []
-    print(f"THIS SHOULD BE BLANK: {temp_issue_proj_ids}")
+    issue_names_temp = []
     if loop_count % 2 == 0:
         print(f"There are {issues_count} issues in total. {len(issue_ids)}")
         send_msg(f"You have {issues_count} issues total in your project.")
@@ -201,14 +197,14 @@ else:
       if issue_stats2[i] != issue_stats[i]:
          dif_activity_count += 1
          if issue_stats2[i] == 1:
-             send_msg(f"Issue with id {issue_ids[i]} was completed!")
+             send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
    send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
    print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
 loop_time = time.time() - timer_start
 print(f"It took {loop_time} seconds to finish one loop.")
 #LOOPING:
 
-for i in range(loops):
+for z in range(loops):
     print("waiting, make your change!")
     time.sleep(10)
     issues_count = 0
@@ -234,15 +230,17 @@ for i in range(loops):
     issue_stats = issue_stats2
     issue_ids = issue_ids2
     issue_proj_ids = issue_proj_ids2
+    issue_names = issue_names2
     
     issue_ids2 = temp_issue_ids
     issue_stats2 = temp_issue_stats
     issue_proj_ids2 = temp_issue_proj_ids
+    issue_names2 = issue_names_temp
     
     temp_issue_stats = []
     temp_issue_ids = []
     temp_issue_proj_ids = []
-    print(f"THIS SHOULD BE BLANK: {temp_issue_proj_ids}")
+    issue_names_temp = []
     if loop_count % 2 == 0:
         print(f"There are {issues_count} issues in total. {len(issue_ids)}")
         send_msg(f"You have {issues_count} issues total in your project.")
@@ -258,7 +256,7 @@ for i in range(loops):
           if issue_stats2[i] != issue_stats[i]:
              dif_activity_count += 1
              if issue_stats2[i] == 1:
-                 send_msg(f"Issue with id {issue_ids[i]} was completed!")
+                 send_msg(f"The issue {issue_names2[i]} was completed! https://app.plane.so/{plane_slug}/projects/{issue_proj_ids2[i]}/issues/{issue_ids[i]}")
        send_msg(f"{dif_activity_count} issues have been changed since the last loop excecuted")
        print(f"{dif_activity_count} issues have been changed since the last loop excecuted") 
     dif_activity_count = 0
