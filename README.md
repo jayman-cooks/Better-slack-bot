@@ -47,3 +47,5 @@ https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html
 https://docs.aws.amazon.com/lambda/latest/dg/images-create.html
 
 Once you have your Lambda function, bump up your timeout value to something pretty similar to your run duration. You can use the test event to run your bot. Another AWS service would probably work, but I chose Lambda because it could theoretically be free. Be careful with ECR though; you only get 1 year of free private storage. 
+
+Lastly, make a second lambda function with the code from Lambda function2/Lambdafunc.py. Set the original function's destination to this function on a failure.
